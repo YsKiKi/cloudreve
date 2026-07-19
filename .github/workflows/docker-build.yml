@@ -42,7 +42,7 @@ jobs:
       - name: Build frontend assets
         run: |
           cd assets
-          npm ci
+          npm ci --legacy-peer-deps
           npm run build
           cd ..
           # Create assets.zip for embed (required by application/statics/statics.go)
