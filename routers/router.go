@@ -664,6 +664,12 @@ func initMasterRouter(dep dependency.Dep) *gin.Engine {
 				controllers.FromQuery[explorer.FileThumbService](explorer.FileThumbParameterCtx{}),
 				controllers.Thumb,
 			)
+			// get random images
+			file.GET("random",
+				middleware.ContextHint(),
+				controllers.FromQuery[explorer.RandomFileService](explorer.RandomFileParamCtx{}),
+				controllers.RandomFile,
+			)
 			// Delete files
 			file.DELETE("",
 				middleware.RequiredScopes(types.ScopeFilesWrite),

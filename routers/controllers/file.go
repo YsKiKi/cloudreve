@@ -477,3 +477,18 @@ func FulltextSearch(c *gin.Context) {
 		Data: resp,
 	})
 }
+
+// RandomFile 随机获取目录下的图片文件
+func RandomFile(c *gin.Context) {
+	service := ParametersFromContext[*explorer.RandomFileService](c, explorer.RandomFileParamCtx{})
+	resp, err := service.GetRandomFiles(c)
+	if err != nil {
+		c.JSON(200, serializer.Err(c, err))
+		c.Abort()
+		return
+	}
+
+	c.JSON(200, serializer.Response{
+		Data: resp,
+	})
+}

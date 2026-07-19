@@ -485,11 +485,25 @@ func (s *FileURLService) Get(c *gin.Context) (*FileURLResponse, error) {
 type (
 	FileThumbParameterCtx struct{}
 	FileThumbService      struct {
-		Uri string `form:"uri" binding:"required"`
+		Uri        string `form:"uri" binding:"required"`
+		Width      int    `form:"width"`
+		Height     int    `form:"height"`
+		Format     string `form:"format"`
+		Quality    int    `form:"quality"`
+		Fit        string `form:"fit"`
+		Position   string `form:"position"`
+		Background string `form:"background"`
+		Blur       int    `form:"blur"`
+		NoCache    bool   `form:"no_cache"`
 	}
 	FileThumbResponse struct {
-		Url     string     `json:"url"`
-		Expires *time.Time `json:"expires"`
+		Url        string     `json:"url"`
+		Width      int        `json:"width"`
+		Height     int        `json:"height"`
+		Size       int64      `json:"size"`
+		Format     string     `json:"format"`
+		Obfuscated bool       `json:"obfuscated"`
+		Expires    *time.Time `json:"expires"`
 	}
 )
 
@@ -505,6 +519,25 @@ func (s *FileThumbService) Get(c *gin.Context) (*FileThumbResponse, error) {
 		return nil, serializer.NewError(serializer.CodeParamErr, "unknown uri", err)
 	}
 
+	// Get file info for metadata (width, height, format)
+	var (
+		fileWidth  int
+		fileHeight int
+		fileFormat string
+		fileSize   int64
+		obfuscated bool
+	)
+	file, err := m.Get(c, uri)
+	if err == nil && file != nil {
+		fileSize = file.Size()
+		metadata := file.Metadata()
+		fileWidth, fileHeight = extractDimensions(metadata)
+		fileFormat = extractFormat(metadata, file.Ext())
+		if v, ok := metadata["stream:obfuscated"]; ok && v == "true" {
+			obfuscated = true
+		}
+	}
+
 	// Get thumbnail
 	thumb, err := m.Thumbnail(c, uri)
 	if err != nil {
@@ -512,15 +545,36 @@ func (s *FileThumbService) Get(c *gin.Context) (*FileThumbResponse, error) {
 	}
 
 	expire := time.Now().Add(dep.SettingProvider().EntityUrlValidDuration(c))
-	thumbUrl, err := thumb.Url(c, entitysource.WithExpire(&expire))
+	thumbUrl, err := thumb.Url(c,
+		entitysource.WithExpire(&expire),
+		entitysource.WithThumb(true),
+	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get thumbnail url: %w", err)
 	}
 
-	return &FileThumbResponse{
-		Url:     thumbUrl.Url,
-		Expires: thumbUrl.ExpireAt,
-	}, nil
+	resp := &FileThumbResponse{
+		Url:        thumbUrl.Url,
+		Expires:    thumbUrl.ExpireAt,
+		Width:      fileWidth,
+		Height:     fileHeight,
+		Size:       fileSize,
+		Format:     fileFormat,
+		Obfuscated: obfuscated,
+	}
+
+	// Apply request-specific overrides for response metadata
+	if s.Width > 0 {
+		resp.Width = s.Width
+	}
+	if s.Height > 0 {
+		resp.Height = s.Height
+	}
+	if s.Format != "" {
+		resp.Format = s.Format
+	}
+
+	return resp, nil
 }
 
 type (
