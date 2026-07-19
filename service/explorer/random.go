@@ -17,6 +17,7 @@ import (
 	"github.com/cloudreve/Cloudreve/v4/pkg/hashid"
 	"github.com/cloudreve/Cloudreve/v4/pkg/serializer"
 	"github.com/gin-gonic/gin"
+	"golang.org/x/tools/container/intsets"
 )
 
 // ImageExtensions defines common image file extensions
@@ -108,7 +109,7 @@ func (s *RandomFileService) GetRandomFiles(c *gin.Context) (*RandomFileResponse,
 	var imageFiles []fs.File
 	walkDepth := 1
 	if s.Recursive {
-		walkDepth = -1 // unlimited depth
+		walkDepth = intsets.MaxInt // unlimited depth
 	}
 
 	err = m.Walk(c, uri, walkDepth, func(file fs.File, level int) error {

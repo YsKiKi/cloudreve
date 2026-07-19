@@ -2,30 +2,31 @@ package statics
 
 import (
 	"archive/zip"
+	"bytes"
 	"bufio"
 	"crypto/sha256"
 	"debug/buildinfo"
 	_ "embed"
 	"encoding/json"
 	"fmt"
-	"github.com/cloudreve/Cloudreve/v4/application/constants"
-	"github.com/cloudreve/Cloudreve/v4/pkg/logging"
-	"github.com/cloudreve/Cloudreve/v4/pkg/util"
-	"github.com/gin-contrib/static"
 	"io"
 	"io/fs"
 	"net/http"
 	"os"
 	"path/filepath"
 	"sort"
-	"strings"
 	"time"
+
+	"github.com/cloudreve/Cloudreve/v4/application/constants"
+	"github.com/cloudreve/Cloudreve/v4/pkg/logging"
+	"github.com/cloudreve/Cloudreve/v4/pkg/util"
+	"github.com/gin-contrib/static"
 )
 
 const StaticFolder = "statics"
 
 //go:embed assets.zip
-var zipContent string
+var zipContent []byte
 
 type GinFS struct {
 	FS http.FileSystem
@@ -102,7 +103,7 @@ func NewServerStaticFS(l logging.Logger, statics fs.FS, isPro bool) (static.Serv
 }
 
 func NewStaticFS(l logging.Logger) fs.FS {
-	zipReader, err := zip.NewReader(strings.NewReader(zipContent), int64(len(zipContent)))
+	zipReader, err := zip.NewReader(bytes.NewReader(zipContent), int64(len(zipContent)))
 	if err != nil {
 		l.Panic("Static resource is not a valid zip file: %s", err)
 	}
