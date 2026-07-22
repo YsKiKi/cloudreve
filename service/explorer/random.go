@@ -329,5 +329,3 @@ func extractFormat(metadata map[string]string, ext string) string {
 	}
 	return ""
 }
-
-

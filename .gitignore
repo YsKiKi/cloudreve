@@ -28,6 +28,9 @@ version.lock
 
 # Config file
 *.ini
+
+# Build docs (local only)
+.build/docs/
 conf/conf.ini
 /statik/
 .vscode/

@@ -2,8 +2,8 @@ package statics
 
 import (
 	"archive/zip"
-	"bytes"
 	"bufio"
+	"bytes"
 	"crypto/sha256"
 	"debug/buildinfo"
 	_ "embed"
